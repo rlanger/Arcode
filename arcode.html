@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Arcode</title>
+  <script src="http://code.jquery.com/jquery-latest.js"></script>
+  <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+  <script src="./Entity.js"></script>
+  <script src="./InputEngine.js"></script>
+
+  <!--script src="./GameEngine.js"></script-->
+
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+
+<script>
+$(document).ready(function() { 
+
+entities = new Array();
+target = null;
+readiedSpell = null;
+
+//game.setup();
+
+// get canvas and canvas context
+var canvas = $("#gameworld")[0];
+var context = canvas.getContext("2d");
+
+
+
+
+
+function Entity () {
+  this.pos = {x:0, y:0};
+  this.size = {x:0, y:0};
+  this.zindex = 0;
+};
+
+Entity.prototype.update = function () { };
+
+Entity.prototype.draw = function () { };
+
+
+//InteractiveRect.prototype.constructor = InteractiveRect;
+function InteractiveRect () {
+  Entity.call(this);
+  this.size = {x:100, y:100};
+  //this.pos = {x:10, y:10};
+  this.color = "#000";
+  this.onFire = false;
+}
+
+InteractiveRect.prototype = new Entity();
+
+InteractiveRect.prototype.draw = function () {
+  context.fillStyle = this.color;
+  context.fillRect(this.pos.x-(this.size.x/2), this.pos.y-this.size.y, this.size.x, this.size.y);
+  console.log("DRAW:" + this.pos.x + ", " + this.pos.y);
+};
+
+InteractiveRect.prototype.was_clicked = function (clickX, clickY) {
+    var halfWidth = this.size.x/2;
+
+    if (clickX >= this.pos.x-halfWidth && clickX <= this.pos.x+halfWidth && clickY >= this.pos.y-this.size.y && clickY <= this.pos.y){
+      console.log("CLICKED RECT");
+      return true;
+    }
+    console.log("RECT NOT CLICKED");
+    return false;
+};
+
+InteractiveRect.prototype.update = function () {
+    if(this.onFire){
+      this.size.y -= 1;
+    }
+
+};
+
+InteractiveRect.prototype.init = function (posx, posy) {
+    this.pos.x = posx;
+    this.pos.y = posy;
+    entities.push(this);
+    console.log("INIT:" + this.pos.x + ", " + this.pos.y);
+};
+
+//FireClass = EntityClass.extend ({
+
+
+function Tree (location) {
+  Entity.call(this);
+  this.size = {x:100, y:120};
+  this.color = "#3F0";
+  //key value array with properties like "onFire?"
+
+  this.pos.x = location.x;
+  this.pos.y = location.y;
+  entities.push(this);
+  console.log("INIT:" + this.pos.x + ", " + this.pos.y);
+};
+
+Tree.prototype = new Entity();
+
+Tree.prototype.draw = function () {
+  context.fillStyle = "#630";
+  context.fillRect(this.pos.x-10, this.pos.y-20, 20, 20);
+  context.fillStyle = this.color;
+  context.fillRect(this.pos.x-(this.size.x/2), this.pos.y-this.size.y, this.size.x, this.size.y-20);
+};
+
+Tree.prototype.was_clicked = function (clickX, clickY) {
+    if (clickX >= this.pos.x-(this.size.x/2) && clickX <= this.pos.x+(this.size.x/2) && clickY >= this.pos.y-this.size.y && clickY <= this.pos.y){
+      return true;
+    }
+    return false;
+  };
+
+function Lake (location) {
+  Entity.call(this);
+  this.size = {x:100, y:400}
+  this.color = "#00F"
+
+  this.pos.x = location.x;
+  this.pos.y = location.y;
+  entities.push(this);
+  console.log("INIT:" + this.pos.x + ", " + this.pos.y);
+}
+
+Lake.prototype = new Entity();
+
+Lake.prototype.draw = function () {
+  context.fillStyle = this.color;
+  context.fillRect(this.pos.x-(this.size.x/2), this.pos.y-(this.size.y/2), this.size.x, this.size.y);
+};
+
+Lake.prototype.was_clicked = function (clickX, clickY) {
+  if (clickX >= this.pos.x-(this.size.x/2) && clickX <= this.pos.x+(this.size.x/2) && clickY >= this.pos.y-(this.size.y/2) && clickY <= this.pos.y+(this.size.y/2)){
+    return true;
+  }
+  return false;
+};
+
+
+
+
+function Grass (location) {
+  Entity.call(this);
+  this.size = {x:40, y:40}
+  this.color = "#390"
+
+  this.pos.x = location.x;
+  this.pos.y = location.y;
+  entities.push(this);
+  console.log("INIT:" + this.pos.x + ", " + this.pos.y);
+}
+
+Grass.prototype = new Entity();
+
+Grass.prototype.draw = function () {
+  context.fillStyle = this.color;
+  context.fillRect(this.pos.x-(this.size.x/2), this.pos.y-(this.size.y/2), this.size.x, this.size.y);
+};
+
+Grass.prototype.was_clicked = function (clickX, clickY) {
+  if (clickX >= this.pos.x-(this.size.x/2) && clickX <= this.pos.x+(this.size.x/2) && clickY >= this.pos.y-(this.size.y/2) && clickY <= this.pos.y+(this.size.y/2)){
+    return true;
+  }
+  return false;
+};
+
+function Rock (location) {
+  Entity.call(this);
+  this.size = {x:30, y:30}
+  this.color = "999"
+
+  this.pos.x = location.x;
+  this.pos.y = location.y;
+  entities.push(this);
+  console.log("INIT:" + this.pos.x + ", " + this.pos.y);
+}
+
+Rock.prototype = new Entity();
+
+Rock.prototype.draw = function () {
+  context.fillStyle = this.color;
+  context.fillRect(this.pos.x-(this.size.x/2), this.pos.y-(this.size.y/2), this.size.x, this.size.y);
+};
+
+Rock.prototype.was_clicked = function (clickX, clickY) {
+  if (clickX >= this.pos.x-(this.size.x/2) && clickX <= this.pos.x+(this.size.x/2) && clickY >= this.pos.y-(this.size.y/2) && clickY <= this.pos.y+(this.size.y/2)){
+    return true;
+  }
+  return false;
+};
+
+
+
+
+function Player (location) {
+  Entity.call(this);
+  this.size = {x:20, y:20}
+  this.color = "#909"
+
+  this.pos.x = location.x;
+  this.pos.y = location.y;
+  entities.push(this);
+  console.log("INIT:" + this.pos.x + ", " + this.pos.y);
+}
+
+Player.prototype = new Entity();
+
+Player.prototype.draw = function () {
+  context.fillStyle = this.color;
+  context.fillRect(this.pos.x-(this.size.x/2), this.pos.y-this.size.y, this.size.x, this.size.y);
+};
+
+Player.prototype.was_clicked = function (clickX, clickY) {
+  return false;
+};
+
+
+
+
+function Location (posx, posy) {
+  this.x = posx;
+  this.y = posy;
+};
+
+
+
+
+
+
+
+//interactiveRect1 = new InteractiveRect();
+//interactiveRect1.init(200, 200);
+//interactiveRect2 = new InteractiveRect();
+//interactiveRect2.init(400, 300);
+//console.log("Rect1: " + interactiveRect1.pos.x + ", " + interactiveRect1.pos.y);
+
+loc = new Location(600, 200);
+lake = new Lake(loc);
+loc = new Location(550, 100);
+rock = new Rock(loc);
+
+loc = new Location(220, 220);
+pc = new Player(loc);
+loc = new Location(200, 200);
+tree1 = new Tree(loc);
+loc = new Location(400, 300);
+tree2 = new Tree(loc);
+
+
+
+// Array of text elements to include in canvas
+var canvasText = {
+  	what:"",
+  	when:"",
+  	where:""
+};
+  
+var canvasColor = "#390";
+
+canvas.addEventListener('click', function(){
+
+  var x = event.clientX-document.documentElement.scrollLeft-canvas.offsetLeft;
+  var y = event.clientY-document.documentElement.scrollTop-canvas.offsetTop;
+  console.log("CLICK: "+x+", "+y);
+
+  //check all entities for collision (in z order?)
+  setTarget();
+  //changeColor();
+  castSpell();
+  draw();
+}, false);
+
+function setTarget () {
+  target = null; //change this to be background or something?
+
+  for (var i=0; i<entities.length; i++) {
+      var ent = entities[i];
+      if (ent.was_clicked(event.clientX, event.clientY)){
+        target = ent;
+        return;
+      }
+    }
+}
+
+function changeColor (newColor) {
+  target.color = newColor;
+}
+
+function castSpell () {
+    spellText = $("#spell").val();
+    console.log(spellText);
+    eval(spellText);
+  };
+  
+  function selectTarget () {
+  }
+
+
+// Make canvas stretch to 100% width of window
+  function resizeCanvas() {
+	canvas.width = window.innerWidth;
+	draw(); 
+  }
+  
+  window.addEventListener('resize', resizeCanvas, false);  
+  resizeCanvas();
+
+  function draw() {
+    context.fillStyle = canvasColor;
+  	context.fillRect(0, 0, window.innerWidth, 400);
+    for (var i=0; i<entities.length; i++) {
+      entities[i].draw();
+    }
+  	context.strokeText(canvasText.what, 30, 30);
+  };
+  
+
+  function update() {
+    if (gInput.actions['move-left']) {
+      pc.pos.x -=10;
+    }
+
+    if (gInput.actions['move-right']) {
+      pc.pos.x +=10;
+    }
+
+    if (gInput.actions['move-up']) {
+      pc.pos.y -=10;
+    }
+
+    if (gInput.actions['move-down']) {
+      pc.pos.y +=10;
+    }
+
+    for (var i=0; i<this.entities.length; i++) {
+      var ent = this.entities[i];
+      ent.update();
+    }
+
+    draw();
+  };
+
+
+  var fps = 30;
+  var intervalID = window.setInterval(function(){update()}, 1000/fps);
+
+
+spellIndex = {"ignite":"function ignite() {}"};
+indexString = "<ul>"
+for (spell in spellIndex) {
+  indexString = indexString + '<li><a href="" id="spell-' + spell + '">' + spell + '</a></li>';
+}
+indexString = indexString + '<li><a href="" id="newspell">+ new spell</a></li></ul>';
+
+console.log(indexString);
+
+$("#spellindex").html(indexString);
+
+$("#newspell").click(function(event){event.preventDefault(); console.log("NEW SPELL"); });
+
+    
+});
+
+  $(document).keydown(function(event){gInput.onKeyDown(event);});
+  $(document).keyup(function(event){gInput.onKeyUp(event);});
+
+
+</script>
+
+</head>
+
+<body style="padding:0; margin:0;">
+
+<canvas id="gameworld" height="400" width="100%">
+  Your browser does not support HTML5 Canvas element.
+</canvas>
+
+<form>
+<p>Readied spell:</p>
+<textarea id="spell" cols=120>
+changeColor("#F00")
+</textarea>
+<!--button>Cast</button-->
+</form>
+<hr />
+
+<!--Spellbook, Reference (True Names, Vocab, Tutorials?, Quest Journal?), Settings-->
+<table>
+<tr>
+<td width="300px" valign="top">
+
+<h4>Spells</h4>
+<div id="spellindex"></div>
+
+<h4>Entities</h4>
+</td>
+<td>
+<form>
+<input type="text" size=100 value="ignite">
+</text> 
+<textarea rows=50 cols=70>
+  def ignite ():
+    new fire(target.x, target.y)
+</textarea>
+</form>
+</td>
+</tr>
+</table>
+</body>
+</html>
+
